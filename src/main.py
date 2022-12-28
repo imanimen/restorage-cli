@@ -2,6 +2,7 @@ import click
 import requests
 from tqdm import trange
 from time import sleep
+import json
 
 @click.group()
 def myCommands():
@@ -16,16 +17,27 @@ def hello(name, code):
     
 @click.command()
 @click.option("--email", prompt="Enter your email", help="The email of the user")
-@click.option("--fullname", prompt="Enter your fullname", help="The fullname of the user")
-def login(email, fullname):
+def login(email):
     data_login = {"email": email}
-    requests.post('https://api.restorage.io/api/rest/OTPAuth/Login', data=data_login)
+    login = requests.post('https://api.restorage.io/api/rest/OTPAuth/Login', data=data_login)
+    print(login.content)
     data_otp = {"email": email, "code": click.prompt("Please enter the code you've recieved", type=int)}
     response = requests.post('https://api.restorage.io/api/rest/OTPAuth/AuthenticateUser', data=data_otp)
     req = response.json()
-    file = open('token.txt', "w")
-    file.write(req['data']['token'])
-    print("successfully logged in. use the --upload argument after this message")
+    if req['code'] == 200:
+        file = open('src/token.txt', "x")
+        file.write(req['data']['token'])
+        print("successfully logged in.")
+        
+    else:
+        for i in req['messages']:
+            data_otp = {"email": email, "code": click.prompt(f"{i} Try again", type=int)}
+            response = requests.post('https://api.restorage.io/api/rest/OTPAuth/AuthenticateUser', data=data_otp)
+            req = response.json()
+            if req['code'] == 200:
+                file = open('token.txt', "x")
+                file.write(req['data']['token'])
+                print("successfully logged in.")
     
 @click.command()
 @click.option("--folder", prompt="Enter the folder name", help="the folder name")
@@ -41,8 +53,7 @@ def upload(file, folder):
     if req['code'] != 200:
         for message in req['messages']:
             print(message)
-            ids = [1,2,3,4]
-            print(ids)
+            
             click.prompt("please change the folder name or select the given ids")
     # print("Uploaded Successfully!")
     
