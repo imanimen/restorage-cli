@@ -1,8 +1,17 @@
 import click
 import requests
-from tqdm import trange
-from time import sleep
 import json
+import os
+import colorama
+
+from dotenv import load_dotenv
+
+
+load_dotenv()
+OTP_LOGIN_URL=os.getenv('OTP_LOGIN_URL')
+OTP_AUTH_URL=os.getenv('OTP_AUTH_URL')
+UPLAOD_URL=os.getenv('UPLAOD_URL')
+UPLOAD_FOLDERS=os.getenv('UPLOAD_FOLDERS')
 
 @click.group()
 def myCommands():
@@ -19,20 +28,20 @@ def hello(name, code):
 @click.option("--email", prompt="Enter your email", help="The email of the user")
 def login(email):
     data_login = {"email": email}
-    login = requests.post('https://api.restorage.io/api/rest/OTPAuth/Login', data=data_login)
+    login = requests.post(OTP_LOGIN_URL, data=data_login)
     print(login.content)
     data_otp = {"email": email, "code": click.prompt("Please enter the code you've recieved", type=int)}
-    response = requests.post('https://api.restorage.io/api/rest/OTPAuth/AuthenticateUser', data=data_otp)
+    response = requests.post(OTP_AUTH_URL, data=data_otp)
     req = response.json()
     if req['code'] == 200:
-        file = open('src/token.txt', "x")
+        file = open('token.txt', "x")
         file.write(req['data']['token'])
         print("successfully logged in.")
         
     else:
         for i in req['messages']:
             data_otp = {"email": email, "code": click.prompt(f"{i} Try again", type=int)}
-            response = requests.post('https://api.restorage.io/api/rest/OTPAuth/AuthenticateUser', data=data_otp)
+            response = requests.post(OTP_AUTH_URL, data=data_otp)
             req = response.json()
             if req['code'] == 200:
                 file = open('token.txt', "x")
@@ -41,7 +50,6 @@ def login(email):
     
 @click.command()
 @click.option("--folder", prompt="Enter the folder name", help="the folder name")
-# @click.option("--file", prompt="Enter your file", help="The fullname of the user")
 @click.argument('file', type=click.File('rb'))
 def upload(file, folder):
     token = open('token.txt', 'r')
@@ -53,9 +61,15 @@ def upload(file, folder):
     if req['code'] != 200:
         for message in req['messages']:
             print(message)
+            user_folders = requests.get(UPLOAD_FOLDERS, headers=headers)
+            user_folders_list = user_folders.json()
+            click.echo(click.style('These are your folders. Either select one of them or re-run the command and give the folder name.', fg='green'))
+            for i in user_folders_list['data']:
+                print(i['id'],i['name'])
+            data_upload = {"files[]": file, "folder_id": click.prompt("Please enter the folder id", type=int)}
+            request = requests.post('https://api.restorage.io/api/rest/Restorage/UploadFile', data=data_upload, files=files, headers=headers)
+            click.echo(request.content)
             
-            click.prompt("please change the folder name or select the given ids")
-    # print("Uploaded Successfully!")
     
    
 myCommands.add_command(hello)
