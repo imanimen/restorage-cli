@@ -17,11 +17,9 @@ NOW = time.strftime("%d/%m/%Y%H:%M:%S")
 
 # make dir
 if os.path.exists('/opt/restorage'):
-    print("starting...")
+    pass
 else:
     os.mkdir('/opt/restorage')
-    print('starting...')
-
 
 @click.group()
 def cli():
@@ -65,41 +63,58 @@ def upload(files_array):
     # folder_data = {'folder_name': folder}
 
     user_folders = requests.get(USER_FOLDERS, headers=headers)
-    click.echo(click.style('Your folders are listed below',fg='green'))
+    if user_folders.json()['data']['folders_count'] >= 1:
+        click.echo(click.style('Your folders are listed below',fg='green'))
 
-    for j in user_folders.json()['data']:
-        print(j['id'], '-->', j['name'])
-    # check if user wants to upload in the existing folder or not
-    upload_to_existing = click.prompt(
-        click.style("Do you want to upload your file in one of these folders? y|n", fg='green'))
+        for j in user_folders.json()['data']['folders']:
+            print(j['id'], '-->', j['name'])
+        # check if user wants to upload in the existing folder or not
+        upload_to_existing = click.prompt(
+            click.style("Do you want to upload your file in one of these folders? y|n", fg='green'))
 
-    if upload_to_existing == "y":
-        # get the folder id and send request to API
-        folder_id = click.prompt(click.style("Enter the id of your folder for your files to be uploaded", fg='green'))
-        folder_id_data = {'folder_id': folder_id, 'platform': sys.platform}
-        folder_id_request = requests.post(UPLOAD_FILE,
-                                          data=folder_id_data,
-                                          files=files,
-                                          headers=headers)
-        if folder_id_request.json()['code'] == 401:
-            click.echo(click.style("Your token expired. try `restorage login` and then run your previous command", fg='red'))
+        if upload_to_existing == "y":
+            # get the folder id and send request to API
+            folder_id = click.prompt(click.style("Enter the id of your folder for your files to be uploaded", fg='green'))
+            folder_id_data = {'folder_id': folder_id, 'platform': sys.platform}
+            folder_id_request = requests.post(UPLOAD_FILE,
+                                            data=folder_id_data,
+                                            files=files,
+                                            headers=headers)
+            if folder_id_request.json()['code'] == 401:
+                click.echo(click.style("Your token expired. try `restorage login` and then run your previous command", fg='red'))
+            else:
+                click.echo("Uploaded successfully. The download link would be email to your account.")
+
+
+        elif upload_to_existing == "n":
+            # create the folder that you want to upload your file
+            folder_name = click.prompt(click.style("Enter the folder name that you want to create. It should not be the "
+                                                "same name as your folders", fg='green'), type=str)
+            folder_name_data = {'name': folder_name}
+            # call the api and create the folder
+            create_folder = requests.post(CREATE_FOLDER, data=folder_name_data, headers=headers)
+            print(create_folder.json()['code'])
+            if create_folder.json()['code'] == 401:
+                click.echo(click.style("Your token expired. try `restorage login` and then run your previous command", fg='red'))
         else:
-           click.echo("Uploaded successfully. The download link would be email to your account.")
-
-
-    elif upload_to_existing == "n":
-        # create the folder that you want to upload your file
-        folder_name = click.prompt(click.style("Enter the folder name that you want to create. It should not be the "
-                                               "same name as your folders", fg='green'), type=str)
-        folder_name_data = {'name': folder_name}
-        # call the api and create the folder
-        create_folder = requests.post(CREATE_FOLDER, data=folder_name_data, headers=headers)
-        print(create_folder.json()['code'])
-        if create_folder.json()['code'] == 401:
-            click.echo(click.style("Your token expired. try `restorage login` and then run your previous command", fg='red'))
-    else:
-        print('else')
-
+            print('else')
+    elif user_folders.json()['data']['folders_count'] < 1:
+            # create the folder that you want to upload your file
+            folder_name = click.prompt(click.style("You don't have any folders, Enter the folder name that you want to create. It should not be the "
+                                                "same name as your other folders", fg='green'), type=str)
+            folder_name_data = {'name': folder_name}
+            # call the api and create the folder
+            create_folder = requests.post(CREATE_FOLDER, data=folder_name_data, headers=headers)
+            new_folder_created = {"folder_id": create_folder.json()['data']['id'], "platform":sys.platform}
+            # upload
+            upload_to_new_folder = requests.post(UPLOAD_FILE,
+                                            data=new_folder_created,
+                                            files=files,
+                                            headers=headers)
+            click.echo("Uploaded successfully. The download link would be email to your account.")
+            
+            if upload_to_new_folder.json()['code'] == 401:
+                click.echo(click.style("Your token expired. try `restorage login` and then run your previous command", fg='red'))
 
 
 @cli.command()
