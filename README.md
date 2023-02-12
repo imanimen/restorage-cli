@@ -1,7 +1,7 @@
 # restorage-cli
 
 requirements: 
-python3 >=
+python3 >= \t
 git clone 
 pip install requirements.txt
 
