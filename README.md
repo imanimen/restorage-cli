@@ -4,7 +4,7 @@
 Python 3 >= 
 
 # Installation
-git clone git@github.com:imanimen/restorage-cli.git
+git clone git@github.com:imanimen/restorage-cli.git <br />
 pip install requirements.txt
 
 # Usage 
