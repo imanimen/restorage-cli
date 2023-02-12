@@ -221,8 +221,9 @@ def dump(database, user, password, database_name, file_name):
     headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
         # upload process
     user_folders = requests.get(USER_FOLDERS, headers=headers)
+    
     click.echo(f'Your folders are listed below')
-    for j in user_folders.json()['data']:
+    for j in user_folders.json()['data']['folders']:
         print(j['id'], '-->', j['name'])
     upload_to_existing = click.prompt(
     click.style("Do you want to upload your file in one of these folders? y|n", fg='green'))
