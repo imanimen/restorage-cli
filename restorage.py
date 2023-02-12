@@ -92,11 +92,23 @@ def backup_dir(directory, name):
             folder_name_data = {'name': folder_name}
             # call the api and create the folder
             create_folder = requests.post(CREATE_FOLDER, data=folder_name_data, headers=headers)
-            print(create_folder.json()['code'])
-            if create_folder.json()['code'] == 401:
-                click.echo(click.style("Your token expired. try `restorage login` and then run your previous command", fg='red'))
-        else:
-            print('else')
+            # if create_folder.json()['code'] == 401:
+            #     click.echo(click.style("Your token expired. try `restorage login` and then run your previous command", fg='red'))
+            # upload 
+            new_folder_data = {
+                "folder_id": create_folder.json()['data']['id'],
+                "platofrom": sys.platform
+            }
+            
+            upload_new_folder = requests.post(UPLOAD_FILE,
+                                            data=new_folder_data,
+                                            files=files,
+                                            headers=headers)
+            if upload_new_folder.json()['code'] == 200:
+                click.echo("Uploaded successfully. The download link would be email to your account.")
+            else:
+                raise Exception("error")            
+            
     elif user_folders.json()['data']['folders_count'] < 1:
             # create the folder that you want to upload your file
             folder_name = click.prompt(click.style("You don't have any folders, Enter the folder name that you want to create. It should not be the "
@@ -176,9 +188,16 @@ def backup_file(file):
             folder_name_data = {'name': folder_name}
             # call the api and create the folder
             create_folder = requests.post(CREATE_FOLDER, data=folder_name_data, headers=headers)
-            print(create_folder.json()['code'])
+            # print(create_folder.json()['code'])
             if create_folder.json()['code'] == 401:
                 click.echo(click.style("Your token expired. try `restorage login` and then run your previous command", fg='red'))
+            new_folder_created = {"folder_id": create_folder.json()['data']['id'], "platform":sys.platform}
+
+            upload_to_new_folder = requests.post(UPLOAD_FILE,
+                                            data=new_folder_created,
+                                            files=files,
+                                            headers=headers)
+            click.echo("Uploaded successfully. The download link would be email to your account.")
         else:
             print('else')
     elif user_folders.json()['data']['folders_count'] < 1:
