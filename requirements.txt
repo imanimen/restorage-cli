@@ -1,0 +1,4 @@
+Click==7.0
+colorama==0.4.3
+reportlab==3.5.34
+requests==2.22.0
