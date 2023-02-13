@@ -56,6 +56,19 @@ def backup_dir(directory, name):
     subprocess.run(['zip', '-r', f'{name}.zip', directory])
     subprocess.run(['cp', f'{name}.zip', '/opt/restorage/'])
     file_path = '/opt/restorage/'+f'{name}.zip'
+    cron = click.confirm('Do you want to set this backup as a cron job?')
+    if cron:
+        minute = click.prompt('Enter the minute (0-59)', type=int)
+        hour = click.prompt('Enter the hour (0-23)', type=int)
+        day_of_month = click.prompt('Enter the day of the month (1-31)', type=int)
+        month = click.prompt('Enter the month (1-12)', type=int)
+        day_of_week = click.prompt('Enter the day of the week (0-7)', type=int)
+        command = f"{minute} {hour} {day_of_month} {month} {day_of_week} sudo python3 f'{os.getcwd()}/{__file__}'  backup-dir {directory}"   
+        subprocess.run(f"echo '{command}' >> mycron", shell=True)
+        subprocess.run("crontab mycron", shell=True)
+        subprocess.run("rm mycron", shell=True)
+        click.echo(f'Cron job has been set for {directory} backup.')
+
     
     token = open('token.txt', 'r')
     headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
@@ -97,7 +110,7 @@ def backup_dir(directory, name):
             # upload 
             new_folder_data = {
                 "folder_id": create_folder.json()['data']['id'],
-                "platofrom": sys.platform
+                "platform": sys.platform
             }
             
             upload_new_folder = requests.post(UPLOAD_FILE,
@@ -136,6 +149,7 @@ def backup_dir(directory, name):
 @click.argument('file', type=click.Path())
 def backup_file(file):
     file = str(os.path.abspath(file))
+    subprocess.run(['cp', file, '/opt/restorage'])
     cron = click.confirm('Do you want to set this backup as a cron job?')
     if cron:
         minute = click.prompt('Enter the minute (0-59)', type=int)
@@ -143,7 +157,7 @@ def backup_file(file):
         day_of_month = click.prompt('Enter the day of the month (1-31)', type=int)
         month = click.prompt('Enter the month (1-12)', type=int)
         day_of_week = click.prompt('Enter the day of the week (0-7)', type=int)
-        command = f"{minute} {hour} {day_of_month} {month} {day_of_week} sudo python3 {file} backup-file {file}"   
+        command = f"{minute} {hour} {day_of_month} {month} {day_of_week} sudo python3 f'{os.getcwd()}/{__file__}'  backup-file {file}"   
         subprocess.run(f"echo '{command}' >> mycron", shell=True)
         subprocess.run("crontab mycron", shell=True)
         subprocess.run("rm mycron", shell=True)
@@ -151,7 +165,7 @@ def backup_file(file):
         
 
     # folder = click.prompt('Enter your folder name')
-    subprocess.run(['cp', file, '/opt/restorage'])
+    
     token = open('token.txt', 'r')
     headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
     files = {'files[]': open(file, 'rb')}
@@ -233,7 +247,7 @@ def dump(database, user, password, database_name, file_name):
         day_of_month = click.prompt('Enter the day of the month (1-31)', type=int)
         month = click.prompt('Enter the month (1-12)', type=int)
         day_of_week = click.prompt('Enter the day of the week (0-7)', type=int)
-        command = f"{minute} {hour} {day_of_month} {month} {day_of_week} python3 {__file__} dump --database={database} --user={user} --password={password} --database_name={database_name} --file_name={file_name}"
+        command = f"{minute} {hour} {day_of_month} {month} {day_of_week} python3 f'{os.getcwd()}/{__file__}' dump --database={database} --user={user} --password={password} --database_name={database_name} --file_name={file_name}"
         subprocess.run(f"echo '{command}' >> mycron", shell=True)
         subprocess.run("crontab mycron", shell=True)
         subprocess.run("rm mycron", shell=True)
