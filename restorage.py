@@ -63,7 +63,7 @@ def backup_dir(directory, name):
         day_of_month = click.prompt('Enter the day of the month (1-31)', type=int)
         month = click.prompt('Enter the month (1-12)', type=int)
         day_of_week = click.prompt('Enter the day of the week (0-7)', type=int)
-        command = f"{minute} {hour} {day_of_month} {month} {day_of_week} sudo python3 f'{os.getcwd()}/{__file__}'  backup-dir {directory}"   
+        command = f"{minute} {hour} {day_of_month} {month} {day_of_week} sudo python3 f'{os.getcwd()}/{__file__}' backup-dir {directory}"   
         subprocess.run(f"echo '{command}' >> mycron", shell=True)
         subprocess.run("crontab mycron", shell=True)
         subprocess.run("rm mycron", shell=True)
@@ -157,7 +157,7 @@ def backup_file(file):
         day_of_month = click.prompt('Enter the day of the month (1-31)', type=int)
         month = click.prompt('Enter the month (1-12)', type=int)
         day_of_week = click.prompt('Enter the day of the week (0-7)', type=int)
-        command = f"{minute} {hour} {day_of_month} {month} {day_of_week} sudo python3 f'{os.getcwd()}/{__file__}'  backup-file {file}"   
+        command = f"{minute} {hour} {day_of_month} {month} {day_of_week} sudo python3 f'{os.getcwd()}/{__file__}' backup-file {file}"   
         subprocess.run(f"echo '{command}' >> mycron", shell=True)
         subprocess.run("crontab mycron", shell=True)
         subprocess.run("rm mycron", shell=True)
