@@ -257,14 +257,15 @@ def dump(database, user, password, database_name, file_name):
         FILE_NAME = '/opt/restorage/'+file_name+'.sql'
         subprocess.run(f'mysqldump -u {user} -p {database_name} > {file_name}.sql', shell=True)
         click.echo(f'{database_name} has been backed up successfully to {file_name}.sql')
+        subprocess.run(['cp', f'{file_name}.sql', '/opt/restorage/'])
         
     elif database == 'postgres':
         FILE_NAME = '/opt/restorage/'+file_name+'.tar'
         subprocess.run(f'pg_dump -U {user} -W {database_name} -F t -f {file_name}.tar', shell=True)
         click.echo(f'{database_name} has been backed up successfully to {file_name}.tar')
+        subprocess.run(['cp', f'{file_name}.tar', '/opt/restorage/'])
     
         
-    subprocess.run(['cp', f'{file_name}.sql', '/opt/restorage/'])
     token = open('token.txt', 'r')
     headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
         # upload process
