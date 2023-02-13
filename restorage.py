@@ -35,7 +35,7 @@ def login(email):
     print(response_send_otp.json()['data']['code'])
 
     if response_send_otp.status_code == 200:
-        code = click.prompt("Enter the code you've received", type=int)
+        code = click.prompt("Check your mail inbox. Enter the code you've received", type=int)
         response_auth = requests.post(OTP_AUTH_URL, json={
             'email': email,
             'code': code
@@ -315,6 +315,7 @@ def dump(database, user, password, database_name, file_name):
                     os.remove(f'{file_name}.sql')
                 elif database == "postgres":
                     os.remove(f'{file_name}.tar')
+                    
 @cli.command()
 @click.option('--database', prompt='Enter database type (mysql/postgres)', type=click.Choice(['mysql', 'postgres']))
 @click.option('--user', prompt='Enter database user', type=str)
@@ -330,6 +331,9 @@ def restore(database, user, database_name, file_name):
 
 
 
+@cli.command()
+def manage_cron():
+    print("managing cron")
 
 
 if __name__ == '__main__':
