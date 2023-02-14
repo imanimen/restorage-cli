@@ -212,8 +212,6 @@ def backup_file(file):
                                             files=files,
                                             headers=headers)
             click.echo("Uploaded successfully. The download link would be email to your account.")
-        else:
-            print('else')
     elif user_folders.json()['data']['folders_count'] < 1:
             # create the folder that you want to upload your file
             folder_name = click.prompt(click.style("You don't have any folders, Enter the folder name that you want to create. It should not be the "
