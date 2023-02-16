@@ -32,8 +32,9 @@ def login(email):
     response_send_otp = requests.post(OTP_LOGIN_URL, json={
         'email': email,
     })
-    print(response_send_otp.json()['data']['code'])
-
+    if response_send_otp.json()['code'] == 422:
+        print(response_send_otp.json()['errors'])
+        exit(1)
     if response_send_otp.status_code == 200:
         code = click.prompt("Check your mail inbox. Enter the code you've received", type=int)
         response_auth = requests.post(OTP_AUTH_URL, json={
@@ -264,7 +265,7 @@ def dump(database, user, password, database_name, file_name):
         subprocess.run(['cp', f'{file_name}.tar', '/opt/restorage/'])
     
         
-    token = open('token.txt', 'r')
+    token = open('/opt/restorage/token.txt', 'r')
     headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
         # upload process
     user_folders = requests.get(USER_FOLDERS, headers=headers)
