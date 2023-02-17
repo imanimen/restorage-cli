@@ -11,6 +11,7 @@ OTP_AUTH_URL = "https://api.restorage.io/api/rest/OTPAuth/AuthenticateUser"
 USER_FOLDERS = "https://api.restorage.io/api/rest/Restorage/UserFolders"
 UPLOAD_FILE = "https://api.restorage.io/api/rest/Restorage/UploadFile"
 CREATE_FOLDER = "https://api.restorage.io/api/rest/Restorage/CreateFolder"
+CHECK_TOKEN = "https://api.restorage.io/api/rest/Restorage/UserAccount"
 
 time = datetime.now()
 NOW = time.strftime("%d/%m/%Y%H:%M:%S")
@@ -24,6 +25,25 @@ else:
 @click.group()
 def cli():
     pass
+
+
+
+def check_token(token):
+    token = open('/opt/restorage/token.txt', 'r')
+    headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
+    
+    # call the check api
+    check = requests.get(CHECK_TOKEN, headers=headers)
+
+    if check.json()['code'] == 200:
+        return true
+        # implement in onther functions
+    if check.json()['code'] == 422:
+        print(check.json['errors'])
+
+ 
+
+
 
 
 @cli.command()
@@ -43,7 +63,7 @@ def login(email):
         })
         if response_auth.status_code == 200:    
             token = response_auth.json()['data']['token']
-            with open('token.txt', 'w') as f:
+            with open('/opt/restorage/token.txt', 'w') as f:
                 f.write(token)
             click.echo(f'Login successful!, Use resotrage --help')
     else:
@@ -71,7 +91,7 @@ def backup_dir(directory, name):
         click.echo(f'Cron job has been set for {directory} backup.')
 
     
-    token = open('token.txt', 'r')
+    token = open('/opt/restorage/token.txt', 'r')
     headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
     files = {'files[]': open(file_path, 'rb')}
  
@@ -167,7 +187,7 @@ def backup_file(file):
 
     # folder = click.prompt('Enter your folder name')
     
-    token = open('token.txt', 'r')
+    token = open('/opt/restorage/token.txt', 'r')
     headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
     files = {'files[]': open(file, 'rb')}
     # folder_data = {'folder_name': folder}
