@@ -42,10 +42,6 @@ def check_token(token):
         return False
         print(check.json['errors'])
 
- 
-
-
-
 
 @cli.command()
 @click.option('--email', prompt='Enter your email', type=str)
@@ -53,6 +49,7 @@ def login(email):
     response_send_otp = requests.post(OTP_LOGIN_URL, json={
         'email': email,
     })
+    # print(response_send_otp.json()['data'])
     if response_send_otp.json()['code'] == 422:
         print(response_send_otp.json()['errors'])
         exit(1)
@@ -66,9 +63,9 @@ def login(email):
             token = response_auth.json()['data']['token']
             with open('/opt/restorage/token.txt', 'w') as f:
                 f.write(token)
-            click.echo(f'Login successful!, Use resotrage --help')
+            click.echo(f'Login successful!, Use ./resotrage.py --help')
     else:
-        click.echo(f'Login failed with status code {response.status_code}.')
+        click.echo(f'Login failed with status code ' + response_auth.json()['code'])
 
 
 @cli.command()
@@ -95,11 +92,9 @@ def backup_dir(directory, name):
     token = open('/opt/restorage/token.txt', 'r')
     headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
     files = {'files[]': open(file_path, 'rb')}
-    if check_token(token):
-            
-    
-        user_folders = requests.get(USER_FOLDERS, headers=headers)
-        if user_folders.json()['data']['folders_count'] >= 1:
+
+    user_folders = requests.get(USER_FOLDERS, headers=headers)
+    if user_folders.json()['data']['folders_count'] >= 1:
             click.echo(click.style('Your folders are listed below',fg='green'))
 
             for j in user_folders.json()['data']['folders']:
@@ -117,7 +112,7 @@ def backup_dir(directory, name):
                                                 files=files,
                                                 headers=headers)
                 if folder_id_request.json()['code'] == 401:
-                    click.echo(click.style("Your token expired. try `restorage login` and then run your previous command", fg='red'))
+                    click.echo(click.style("Your token expired. try `restorage.py login` and then run your previous command", fg='red'))
                 else:
                     click.echo("Uploaded successfully. The download link would be email to your account.")
 
@@ -146,7 +141,7 @@ def backup_dir(directory, name):
                 else:
                     raise Exception("error")            
                 
-        elif user_folders.json()['data']['folders_count'] < 1:
+    elif user_folders.json()['data']['folders_count'] < 1:
                 # create the folder that you want to upload your file
                 folder_name = click.prompt(click.style("You don't have any folders, Enter the folder name that you want to create. It should not be the "
                                                     "same name as your other folders", fg='green'), type=str)
@@ -164,9 +159,6 @@ def backup_dir(directory, name):
                 if upload_to_new_folder.json()['code'] == 401:
                     click.echo(click.style("Your token expired. try `restorage login` and then run your previous command", fg='red'))
                     os.remove('/opt/restorage/'+f'{name}.zip')
-    
-    else: 
-        print("Your token is invalid. Login to refresh your token")
     
 
 
@@ -352,13 +344,6 @@ def restore(database, user, database_name, file_name):
     elif database == 'postgres':
         subprocess.run(f'pg_restore -U {user} -W -d {database_name} {file_name}.tar', shell=True)
         click.echo(f'{file_name}.tar has been restored to {database_name} successfully.')
-
-
-
-@cli.command()
-def manage_cron():
-    print("managing cron")
-
 
 if __name__ == '__main__':
     cli()
