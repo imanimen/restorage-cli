@@ -28,6 +28,7 @@ def cli():
 
 
 
+# TODO: implement it in functions
 def check_token(token):
     token = open('/opt/restorage/token.txt', 'r')
     headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
