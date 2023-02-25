@@ -28,7 +28,6 @@ def cli():
 
 
 
-# TODO: implement it in functions
 def check_token(token):
     token = open('/opt/restorage/token.txt', 'r')
     headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
@@ -75,19 +74,16 @@ def login(email):
 def backup_dir(directory, name):
     subprocess.run(['zip', '-r', f'{name}.zip', directory])
     subprocess.run(['cp', f'{name}.zip', '/opt/restorage/'])
+    os.remove(f'{name}.zip')
     file_path = '/opt/restorage/'+f'{name}.zip'
     cron = click.confirm('Do you want to set this backup as a cron job?')
     if cron:
-        minute = click.prompt('Enter the minute (0-59)', type=int)
-        hour = click.prompt('Enter the hour (0-23)', type=int)
-        day_of_month = click.prompt('Enter the day of the month (1-31)', type=int)
-        month = click.prompt('Enter the month (1-12)', type=int)
-        day_of_week = click.prompt('Enter the day of the week (0-7)', type=int)
-        command = f"{minute} {hour} {day_of_month} {month} {day_of_week} sudo python3 f'{os.getcwd()}/{__file__}' backup-dir {directory}"   
+        schedule = click.prompt('Enter the cron schedule in the format <minute> <hour> <day_of_month> <month> <day_of_week>', default='0 0 * * *')
+        command = f"{schedule} sudo python3 {os.getcwd()}/{__file__} backup-dir {directory}"
         subprocess.run(f"echo '{command}' >> mycron", shell=True)
         subprocess.run("crontab mycron", shell=True)
         subprocess.run("rm mycron", shell=True)
-        click.echo(f'Cron job has been set for {directory} backup.')
+        click.echo(f'Cron job has been set for {directory} backup with schedule "{schedule}".')
 
     
     token = open('/opt/restorage/token.txt', 'r')
@@ -159,7 +155,7 @@ def backup_dir(directory, name):
                 
                 if upload_to_new_folder.json()['code'] == 401:
                     click.echo(click.style("Your token expired. try `restorage login` and then run your previous command", fg='red'))
-                    os.remove('/opt/restorage/'+f'{name}.zip')
+    os.remove('/opt/restorage/'+f'{name}.zip')
     
 
 
@@ -168,6 +164,7 @@ def backup_dir(directory, name):
 def backup_file(file):
     file = str(os.path.abspath(file))
     subprocess.run(['cp', file, '/opt/restorage'])
+    os.remove(f'{name}.zip')
     cron = click.confirm('Do you want to set this backup as a cron job?')
     if cron:
         minute = click.prompt('Enter the minute (0-59)', type=int)
@@ -345,6 +342,13 @@ def restore(database, user, database_name, file_name):
     elif database == 'postgres':
         subprocess.run(f'pg_restore -U {user} -W -d {database_name} {file_name}.tar', shell=True)
         click.echo(f'{file_name}.tar has been restored to {database_name} successfully.')
+
+
+
+@cli.command()
+def manage_cron():
+    print("managing cron")
+
 
 if __name__ == '__main__':
     cli()
