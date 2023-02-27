@@ -31,10 +31,8 @@ def cli():
 def check_token(token):
     token = open('/opt/restorage/token.txt', 'r')
     headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
-    
     # call the check api
     check = requests.get(CHECK_TOKEN, headers=headers)
-
     if check.json()['code'] == 200:
         return true
         # implement in onther functions
