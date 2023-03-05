@@ -6,6 +6,8 @@ import sys
 from datetime import datetime
 
 
+
+
 OTP_LOGIN_URL = "https://api.restorage.io/api/rest/OTPAuth/Login"
 OTP_AUTH_URL = "https://api.restorage.io/api/rest/OTPAuth/AuthenticateUser"
 USER_FOLDERS = "https://api.restorage.io/api/rest/Restorage/UserFolders"
@@ -31,8 +33,10 @@ def cli():
 def check_token(token):
     token = open('/opt/restorage/token.txt', 'r')
     headers = {'Accept': "Application/json", 'Authorization': 'Bearer ' + token.read()}
+    
     # call the check api
     check = requests.get(CHECK_TOKEN, headers=headers)
+
     if check.json()['code'] == 200:
         return true
         # implement in onther functions
@@ -72,7 +76,6 @@ def login(email):
 def backup_dir(directory, name):
     subprocess.run(['zip', '-r', f'{name}.zip', directory])
     subprocess.run(['cp', f'{name}.zip', '/opt/restorage/'])
-    os.remove(f'{name}.zip')
     file_path = '/opt/restorage/'+f'{name}.zip'
     cron = click.confirm('Do you want to set this backup as a cron job?')
     if cron:
@@ -162,7 +165,6 @@ def backup_dir(directory, name):
 def backup_file(file):
     file = str(os.path.abspath(file))
     subprocess.run(['cp', file, '/opt/restorage'])
-    os.remove(f'{name}.zip')
     cron = click.confirm('Do you want to set this backup as a cron job?')
     if cron:
         minute = click.prompt('Enter the minute (0-59)', type=int)
@@ -266,13 +268,13 @@ def dump(database, user, password, database_name, file_name):
 
     if database == 'mysql':
         FILE_NAME = '/opt/restorage/'+file_name+'.sql'
-        subprocess.run(f'mysqldump -u {user} -p {database_name} > {file_name}.sql', shell=True)
+        subprocess.run(f'sudo mysqldump -u {user} -p {password} {database_name} > {file_name}.sql', shell=True)
         click.echo(f'{database_name} has been backed up successfully to {file_name}.sql')
         subprocess.run(['cp', f'{file_name}.sql', '/opt/restorage/'])
         
     elif database == 'postgres':
         FILE_NAME = '/opt/restorage/'+file_name+'.tar'
-        subprocess.run(f'pg_dump -U {user} -W {database_name} -F t -f {file_name}.tar', shell=True)
+        subprocess.run(f'sudo pg_dump -U {user} -W {database_name} -F t -f {file_name}.tar', shell=True)
         click.echo(f'{database_name} has been backed up successfully to {file_name}.tar')
         subprocess.run(['cp', f'{file_name}.tar', '/opt/restorage/'])
     
