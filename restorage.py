@@ -5,9 +5,6 @@ import os
 import sys
 from datetime import datetime
 
-
-
-
 OTP_LOGIN_URL = "https://api.restorage.io/api/rest/OTPAuth/Login"
 OTP_AUTH_URL = "https://api.restorage.io/api/rest/OTPAuth/AuthenticateUser"
 USER_FOLDERS = "https://api.restorage.io/api/rest/Restorage/UserFolders"
